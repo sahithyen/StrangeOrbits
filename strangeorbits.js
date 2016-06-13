@@ -247,7 +247,7 @@
       isTouched = true;
     }.bind(this);
 
-    // Handles a ended touch event
+    // Handles an ended touch event
     var touchEnded = function() {
       isTouched = false;
     }.bind(this);
