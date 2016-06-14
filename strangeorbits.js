@@ -137,7 +137,7 @@
       element.addEventListener("touchmove", changeTouchPos);
       element.addEventListener("touchend", touchEnded);
       element.addEventListener("touchcancel", touchEnded);
-    }.bind(this);
+    };
 
     /**
      * Public functions
@@ -180,7 +180,7 @@
         easing: typeof easing === "undefined" ? "strange" : easing,
         callback: callback
       });
-    }.bind(this);
+    };
 
     /**
      * Private functions
@@ -214,9 +214,9 @@
       if (actualImage !== null) {
         setFigure(actualImage, function() {
           removeOffscreenFigurePoints();
-        }.bind(this));
+        });
       }
-    }.bind(this);
+    };
 
     // Handles mouse position changes
     var changeMousePos = function(event) {
@@ -224,33 +224,33 @@
 
       pointerPos.x = event.clientX;
       pointerPos.y = event.clientY;
-    }.bind(this);
+    };
 
     // Handles a mouse button press
     var mouseButtonPressed = function() {
       mouseDown = true;
-    }.bind(this);
+    };
 
     // Handles a mouse button release
     var mouseButtonReleased = function() {
       mouseDown = false;
-    }.bind(this);
+    };
 
     // Handles touch position changes
     var changeTouchPos = function(event) {
       pointerPos.x = event.changedTouches[0].clientX;
       pointerPos.y = event.changedTouches[0].clientY;
-    }.bind(this);
+    };
 
     // Handles a started touch event
     var touchStarted = function() {
       isTouched = true;
-    }.bind(this);
+    };
 
     // Handles an ended touch event
     var touchEnded = function() {
       isTouched = false;
-    }.bind(this);
+    };
 
     // Creates the next frame
     var frame = function() {
@@ -281,7 +281,7 @@
       if (!paused) {
         animationFrameRequest = requestAnimationFrame(frame);
       }
-    }.bind(this);
+    };
 
     // Updates animation state and returns move factor
     var updateAnimation = function(deltaTime) {
@@ -296,7 +296,7 @@
             case 'showFigure':
               setFigure(currentAnimation.properties.url, function() {
                 currentAnimation.ready = true;
-              }.bind(this));
+              });
               break;
 
             case 'hideFigure':
@@ -337,7 +337,7 @@
       }
 
       return moveFactor;
-    }.bind(this);
+    };
 
     // Sets a new figure
     var setFigure = function(url, callback) {
@@ -346,8 +346,8 @@
 
         imageData = getImageData(image);
         imageDataToFigure(imageData, callback);
-      }.bind(this));
-    }.bind(this);
+      });
+    };
 
     // Loads a new image
     var loadImage = function(url, callback) {
@@ -359,10 +359,10 @@
         if (typeof callback === 'function') {
           callback(image);
         }
-      }.bind(this);
+      };
 
       actualImage = image.src = url;
-    }.bind(this);
+    };
 
     // Returns image data from an image
     var getImageData = function(image) {
@@ -396,7 +396,7 @@
       imageData = vCtx.getImageData(0, 0, elW, elH);
 
       return imageData.data;
-    }.bind(this);
+    };
 
 
     // Converts image data to a points figure
@@ -432,7 +432,7 @@
       if (typeof callback === 'function') {
         callback();
       }
-    }.bind(this);
+    };
 
 
     // Removes offscreen points of previous figure
@@ -443,7 +443,7 @@
           i--;
         }
       }
-    }.bind(this);
+    };
 
     /**
      * FigurePoint
