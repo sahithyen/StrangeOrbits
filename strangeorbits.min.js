@@ -3,7 +3,7 @@
  * @name StrangeOrbits
  *
  * @author Sahithyen Kanaganayagam - @sahithyen
- * @version 1.0.0
+ * @version 1.0.1
  *
  * @description Creates a canvas with figures out of points from an image
  *
