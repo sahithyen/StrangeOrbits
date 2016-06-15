@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // StrangeOrbits
   strangeOrbits = new StrangeOrbits(strangeOrbitsDiv, {
-    color: 'red'
+    color: 'orange'
   });
 
   // Properties
