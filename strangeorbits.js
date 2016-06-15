@@ -137,7 +137,7 @@
       element.addEventListener("touchmove", changeTouchPos);
       element.addEventListener("touchend", touchEnded);
       element.addEventListener("touchcancel", touchEnded);
-    }.bind(this);
+    };
 
     /**
      * Public functions
@@ -180,7 +180,7 @@
         easing: typeof easing === "undefined" ? "strange" : easing,
         callback: callback
       });
-    }.bind(this);
+    };
 
     /**
      * Private functions
@@ -214,9 +214,9 @@
       if (actualImage !== null) {
         setFigure(actualImage, function() {
           removeOffscreenFigurePoints();
-        }.bind(this));
+        });
       }
-    }.bind(this);
+    };
 
     // Handles mouse position changes
     var changeMousePos = function(event) {
@@ -224,33 +224,33 @@
 
       pointerPos.x = event.clientX;
       pointerPos.y = event.clientY;
-    }.bind(this);
+    };
 
     // Handles a mouse button press
     var mouseButtonPressed = function() {
       mouseDown = true;
-    }.bind(this);
+    };
 
     // Handles a mouse button release
     var mouseButtonReleased = function() {
       mouseDown = false;
-    }.bind(this);
+    };
 
     // Handles touch position changes
     var changeTouchPos = function(event) {
       pointerPos.x = event.changedTouches[0].clientX;
       pointerPos.y = event.changedTouches[0].clientY;
-    }.bind(this);
+    };
 
     // Handles a started touch event
     var touchStarted = function() {
       isTouched = true;
-    }.bind(this);
+    };
 
     // Handles an ended touch event
     var touchEnded = function() {
       isTouched = false;
-    }.bind(this);
+    };
 
     // Creates the next frame
     var frame = function() {
@@ -281,7 +281,7 @@
       if (!paused) {
         animationFrameRequest = requestAnimationFrame(frame);
       }
-    }.bind(this);
+    };
 
     // Updates animation state and returns move factor
     var updateAnimation = function(deltaTime) {
@@ -296,7 +296,7 @@
             case 'showFigure':
               setFigure(currentAnimation.properties.url, function() {
                 currentAnimation.ready = true;
-              }.bind(this));
+              });
               break;
 
             case 'hideFigure':
@@ -337,7 +337,7 @@
       }
 
       return moveFactor;
-    }.bind(this);
+    };
 
     // Sets a new figure
     var setFigure = function(url, callback) {
@@ -346,8 +346,8 @@
 
         imageData = getImageData(image);
         imageDataToFigure(imageData, callback);
-      }.bind(this));
-    }.bind(this);
+      });
+    };
 
     // Loads a new image
     var loadImage = function(url, callback) {
@@ -359,10 +359,10 @@
         if (typeof callback === 'function') {
           callback(image);
         }
-      }.bind(this);
+      };
 
       actualImage = image.src = url;
-    }.bind(this);
+    };
 
     // Returns image data from an image
     var getImageData = function(image) {
@@ -396,7 +396,7 @@
       imageData = vCtx.getImageData(0, 0, elW, elH);
 
       return imageData.data;
-    }.bind(this);
+    };
 
 
     // Converts image data to a points figure
@@ -432,7 +432,7 @@
       if (typeof callback === 'function') {
         callback();
       }
-    }.bind(this);
+    };
 
 
     // Removes offscreen points of previous figure
@@ -443,265 +443,228 @@
           i--;
         }
       }
-    }.bind(this);
+    };
 
     /**
      * FigurePoint
      **/
 
+    /**
+     * Constructor
+     **/
+
     function FigurePoint(position) {
+      var radiusDelta, opacityDelta, trembleDurationDelta;
+
+      radiusDelta = options.maxParticleRadius - options.minParticleRadius;
+      this.radius = Math.random() * radiusDelta + options.minParticleRadius;
+
+      opacityDelta = options.maxParticleOpacity - options.minParticleOpacity;
+      this.opacity = Math.random() * opacityDelta + options.minParticleOpacity;
+
+      this.offscreen = false;
+
+      switch (Math.floor(Math.random() * 4)) {
+        case 0:
+          this.offscreenPosition = {
+            x: Math.random() * (elW + 200) - 100,
+            y: Math.random() * -80 - 20
+          };
+          break;
+
+        case 1:
+          this.offscreenPosition = {
+            x: elW + (Math.random() * 80 + 20),
+            y: Math.random() * (elH + 200) - 100
+          };
+          break;
+
+        case 2:
+          this.offscreenPosition = {
+            x: Math.random() * (elW + 200) - 100,
+            y: elH + (Math.random() * 80 + 20)
+          };
+          break;
+
+        case 3:
+          this.offscreenPosition = {
+            x: Math.random() * -80 - 20,
+            y: Math.random() * (elH + 200) - 100
+          };
+          break;
+      }
+
+      this.position = {
+        x: this.offscreenPosition.x,
+        y: this.offscreenPosition.y
+      };
+
+      this.previousPosition = {
+        x: this.offscreenPosition.x,
+        y: this.offscreenPosition.y
+      };
+
+      this.nextPosition = {
+        x: position.x,
+        y: position.y
+      };
+
+      this.previousTrembleOffset = {
+        x: 0,
+        y: 0
+      };
+
+      this.nextTrembleOffset = {
+        x: 0,
+        y: 0
+      };
+
+      this.mouseOffset = {
+        x: 0,
+        y: 0
+      };
+
+      trembleDurationDelta = options.maxTrembleDuration - options.minTrembleDuration;
+      this.trembleDuration = Math.random() * trembleDurationDelta + options.minTrembleDuration;
+      this.trembleClock = options.maxTrembleDuration;
+    }
+
+    /**
+     * Functions
+     **/
+
+    FigurePoint.prototype.setPosition = function(positon) {
+      this.previousPosition = {
+        x: this.nextPosition.x,
+        y: this.nextPosition.y
+      };
+
+      this.nextPosition = {
+        x: positon.x,
+        y: positon.y
+      };
+    };
+
+    FigurePoint.prototype.setOffset = function() {
+      this.previousPosition = {
+        x: this.nextPosition.x,
+        y: this.nextPosition.y
+      };
+
+      this.nextPosition = {
+        x: this.offscreenPosition.x,
+        y: this.offscreenPosition.y
+      };
+
+      this.offscreen = true;
+    };
+
+    // Updates state
+    FigurePoint.prototype.update = function(factor, deltaTime) {
       var
-        offscreenPosition,
-        previousPosition,
-        currentPosition,
-        nextPosition,
-        previousTrembleOffset,
-        nextTrembleOffset,
-        trembleOffset,
-        mouseOffset,
-        trembleDuration,
-        trembleClock;
+        deltaX,
+        deltaY;
 
-      /**
-       * Constructor
-       **/
-
-      var init = function() {
-        var radiusDelta, opacityDelta, trembleDurationDelta;
-
-        radiusDelta = options.maxParticleRadius - options.minParticleRadius;
-        this.radius = Math.random() * radiusDelta + options.minParticleRadius;
-
-        opacityDelta = options.maxParticleOpacity - options.minParticleOpacity;
-        this.opacity = Math.random() * opacityDelta + options.minParticleOpacity;
-
-        this.offscreen = false;
-
-        switch (Math.floor(Math.random() * 4)) {
-          case 0:
-            offscreenPosition = {
-              x: Math.random() * (elW + 200) - 100,
-              y: Math.random() * -80 - 20
-            };
-            break;
-
-          case 1:
-            offscreenPosition = {
-              x: elW + (Math.random() * 80 + 20),
-              y: Math.random() * (elH + 200) - 100
-            };
-            break;
-
-          case 2:
-            offscreenPosition = {
-              x: Math.random() * (elW + 200) - 100,
-              y: elH + (Math.random() * 80 + 20)
-            };
-            break;
-
-          case 3:
-            offscreenPosition = {
-              x: Math.random() * -80 - 20,
-              y: Math.random() * (elH + 200) - 100
-            };
-            break;
-        }
+      // Updates main position
+      if (factor < 1) {
+        deltaX = this.nextPosition.x - this.previousPosition.x;
+        deltaY = this.nextPosition.y - this.previousPosition.y;
 
         this.position = {
-          x: offscreenPosition.x,
-          y: offscreenPosition.y
+          x: this.previousPosition.x + (deltaX * factor),
+          y: this.previousPosition.y + (deltaY * factor)
         };
-
-        previousPosition = {
-          x: offscreenPosition.x,
-          y: offscreenPosition.y
-        };
-
-        currentPosition = {
-          x: offscreenPosition.x,
-          y: offscreenPosition.y
-        };
-
-        nextPosition = {
-          x: position.x,
-          y: position.y
-        };
-
-        previousTrembleOffset = {
-          x: 0,
-          y: 0
-        };
-
-        nextTrembleOffset = {
-          x: 0,
-          y: 0
-        };
-
-        mouseOffset = {
-          x: 0,
-          y: 0
-        };
-
-        trembleDurationDelta = options.maxTrembleDuration - options.minTrembleDuration;
-        trembleDuration = Math.random() * trembleDurationDelta + options.minTrembleDuration;
-        trembleClock = options.maxTrembleDuration;
-      }.bind(this);
-
-      /**
-       * Public functions
-       **/
-
-      // Sets position
-      this.setPosition = function(positon) {
-        previousPosition = {
-          x: nextPosition.x,
-          y: nextPosition.y
-        };
-
-        nextPosition = {
-          x: positon.x,
-          y: positon.y
-        };
-      }.bind(this);
-
-      // Sets position offscreen
-      this.setOffset = function() {
-        previousPosition = {
-          x: nextPosition.x,
-          y: nextPosition.y
-        };
-
-        nextPosition = {
-          x: offscreenPosition.x,
-          y: offscreenPosition.y
-        };
-
-        this.offscreen = true;
-      }.bind(this);
-
-      // Updates state
-      this.update = function(factor, deltaTime) {
-        if (factor < 1) {
-          var deltaX, deltaY;
-
-          deltaX = nextPosition.x - previousPosition.x;
-          currentPosition.x = previousPosition.x + (deltaX * factor);
-
-          deltaY = nextPosition.y - previousPosition.y;
-          currentPosition.y = previousPosition.y + (deltaY * factor);
-
-          this.position = {
-            x: currentPosition.x,
-            y: currentPosition.y
-          };
-        } else {
-          this.position = {
-            x: nextPosition.x,
-            y: nextPosition.y
-          };
-        }
-
-        updateTrembleOffset(deltaTime);
-
+      } else {
         this.position = {
-          x: this.position.x + trembleOffset.x,
-          y: this.position.y + trembleOffset.y
+          x: this.nextPosition.x,
+          y: this.nextPosition.y
         };
-
-        if (options.pointForceActivated) {
-          updateMouseOffset();
-
-          this.position = {
-            x: this.position.x + mouseOffset.x,
-            y: this.position.y + mouseOffset.y
-          };
-        }
-      }.bind(this);
-
-      /**
-       * Private functions
-       **/
+      }
 
       // Updates tremble offset
-      var updateTrembleOffset = function(deltaTime) {
-        var
-          timeFactor,
-          deltaX,
-          deltaY,
-          trembleOffsetDelta;
+      var
+        timeFactor,
+        trembleOffsetDelta,
+        trembleOffset;
 
-        if (trembleDuration <= trembleClock) {
-          trembleClock = 0;
+      if (this.trembleDuration <= this.trembleClock) {
+        this.trembleClock = 0;
 
-          previousTrembleOffset = {
-            x: nextTrembleOffset.x,
-            y: nextTrembleOffset.y
-          };
-
-          trembleOffsetDelta = options.maxTrembleOffset - options.minTrembleOffset;
-          nextTrembleOffset = {
-            x: Math.random() * trembleOffsetDelta - options.minTrembleOffset,
-            y: Math.random() * 20 - 10
-          };
-        }
-
-        deltaX = nextTrembleOffset.x - previousTrembleOffset.x;
-        deltaY = nextTrembleOffset.y - previousTrembleOffset.y;
-
-        trembleClock += deltaTime;
-
-        timeFactor = trembleClock / trembleDuration;
-
-        trembleOffset = {
-          x: previousTrembleOffset.x + (deltaX * timeFactor),
-          y: previousTrembleOffset.y + (deltaY * timeFactor)
+        this.previousTrembleOffset = {
+          x: this.nextTrembleOffset.x,
+          y: this.nextTrembleOffset.y
         };
-      }.bind(this);
+
+        trembleOffsetDelta = options.maxTrembleOffset - options.minTrembleOffset;
+        this.nextTrembleOffset = {
+          x: Math.random() * trembleOffsetDelta - options.minTrembleOffset,
+          y: Math.random() * 20 - 10
+        };
+      }
+
+      deltaX = this.nextTrembleOffset.x - this.previousTrembleOffset.x;
+      deltaY = this.nextTrembleOffset.y - this.previousTrembleOffset.y;
+
+      this.trembleClock += deltaTime;
+
+      timeFactor = this.trembleClock / this.trembleDuration;
+
+      trembleOffset = {
+        x: this.previousTrembleOffset.x + (deltaX * timeFactor),
+        y: this.previousTrembleOffset.y + (deltaY * timeFactor)
+      };
+
+      this.position = {
+        x: this.position.x + trembleOffset.x,
+        y: this.position.y + trembleOffset.y
+      };
 
       // Updates mouse offset
-      var updateMouseOffset = function() {
-        var
-          deltaX,
-          deltaY,
-          forceRadius,
-          distanceToMouse,
-          hasMouseOffset,
-          maxMouseOffset;
+      if (!options.pointForceActivated) {
+        return;
+      }
 
-        deltaX = this.position.x - pointerPos.x;
-        deltaY = this.position.y - pointerPos.y;
+      var
+        forceRadius,
+        distanceToMouse,
+        hasMouseOffset,
+        maxMouseOffset;
 
-        distanceToMouse = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+      deltaX = this.position.x - pointerPos.x;
+      deltaY = this.position.y - pointerPos.y;
 
-        if (mouseDown && options.clickedMouseForceActivated) {
-          forceRadius = options.clickedMouseForceRadius;
-        } else {
-          forceRadius = options.pointForceRadius;
-        }
+      distanceToMouse = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 
-        hasMouseOffset = Math.abs(mouseOffset.x) > 0 ||
-          Math.abs(mouseOffset.y) > 0;
+      if (mouseDown && options.clickedMouseForceActivated) {
+        forceRadius = options.clickedMouseForceRadius;
+      } else {
+        forceRadius = options.pointForceRadius;
+      }
 
-        if (!isTouched && hasMouseOffset) {
-          mouseOffset.x -= mouseOffset.x * 0.1;
-          mouseOffset.y -= mouseOffset.y * 0.1;
-        } else if (Math.abs(distanceToMouse) < forceRadius) {
-          maxMouseOffset = {
-            x: (deltaX / distanceToMouse * forceRadius) - deltaX,
-            y: (deltaY / distanceToMouse * forceRadius) - deltaY
-          };
+      hasMouseOffset = Math.abs(this.mouseOffset.x) > 0 ||
+        Math.abs(this.mouseOffset.y) > 0;
 
-          mouseOffset.x += (maxMouseOffset.x - mouseOffset.x) * 0.1;
-          mouseOffset.y += (maxMouseOffset.y - mouseOffset.y) * 0.1;
-        } else if (hasMouseOffset) {
-          mouseOffset.x -= mouseOffset.x * 0.1;
-          mouseOffset.y -= mouseOffset.y * 0.1;
-        }
-      }.bind(this);
+      if (!isTouched && hasMouseOffset) {
+        this.mouseOffset.x -= this.mouseOffset.x * 0.1;
+        this.mouseOffset.y -= this.mouseOffset.y * 0.1;
+      } else if (Math.abs(distanceToMouse) < forceRadius) {
+        maxMouseOffset = {
+          x: (deltaX / distanceToMouse * forceRadius) - deltaX,
+          y: (deltaY / distanceToMouse * forceRadius) - deltaY
+        };
 
-      // Calls constructor
-      init();
-    }
+        this.mouseOffset.x += (maxMouseOffset.x - this.mouseOffset.x) * 0.1;
+        this.mouseOffset.y += (maxMouseOffset.y - this.mouseOffset.y) * 0.1;
+      } else if (hasMouseOffset) {
+        this.mouseOffset.x -= this.mouseOffset.x * 0.1;
+        this.mouseOffset.y -= this.mouseOffset.y * 0.1;
+      }
+
+      this.position = {
+        x: this.position.x + this.mouseOffset.x,
+        y: this.position.y + this.mouseOffset.y
+      };
+    };
 
     // Calls constructor
     init();
