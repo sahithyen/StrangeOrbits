@@ -58,6 +58,7 @@
       animationQueue = [],
       currentAnimation = null,
       actualImage = null,
+      cache,
       elW,
       elH,
       canvas,
@@ -156,7 +157,7 @@
     };
 
     // Shows a figur
-    this.showFigure = function(url, duration, easing, callback) {
+    this.showFigure = function(image, duration, easing, callback) {
       animationQueue.push({
         type: 'showFigure',
         clock: 0,
@@ -164,9 +165,7 @@
         duration: duration,
         easing: typeof easing === "undefined" ? "strange" : easing,
         callback: callback,
-        properties: {
-          url: url
-        }
+        image: image
       });
     };
 
@@ -188,17 +187,22 @@
 
     // Handles resizing
     var resizeCanvas = function() {
+      var
+        devicePixelRatio,
+        backingStoreRatio,
+        ratio;
+
       elW = element.offsetWidth;
       elH = element.offsetHeight;
 
-      var devicePixelRatio = window.devicePixelRatio || 1;
-      var backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
+      devicePixelRatio = window.devicePixelRatio || 1;
+      backingStoreRatio = ctx.webkitBackingStorePixelRatio ||
         ctx.mozBackingStorePixelRatio ||
         ctx.msBackingStorePixelRatio ||
         ctx.oBackingStorePixelRatio ||
         ctx.backingStorePixelRatio || 1;
 
-      var ratio = devicePixelRatio / backingStoreRatio;
+      ratio = devicePixelRatio / backingStoreRatio;
 
       canvas.width = elW * ratio;
       canvas.height = elH * ratio;
@@ -210,6 +214,8 @@
 
       vCtx.canvas.width = elW;
       vCtx.canvas.height = elH;
+
+      cache = {};
 
       if (actualImage !== null) {
         setFigure(actualImage, function() {
@@ -254,7 +260,13 @@
 
     // Creates the next frame
     var frame = function() {
-      var now, deltaTime, moveFactor, i, point, color;
+      var
+        now,
+        deltaTime,
+        moveFactor,
+        i,
+        point,
+        color;
 
       now = Date.now();
       deltaTime = now - lastFrameTime;
@@ -285,7 +297,11 @@
 
     // Updates animation state and returns move factor
     var updateAnimation = function(deltaTime) {
-      var i, easingName, timeFactor, moveFactor;
+      var
+        i,
+        easingName,
+        timeFactor,
+        moveFactor;
 
       if (currentAnimation === null) {
         if (animationQueue.length !== 0) {
@@ -294,7 +310,7 @@
 
           switch (currentAnimation.type) {
             case 'showFigure':
-              setFigure(currentAnimation.properties.url, function() {
+              setFigure(currentAnimation.image, function() {
                 currentAnimation.ready = true;
               });
               break;
@@ -339,101 +355,25 @@
       return moveFactor;
     };
 
-    // Sets a new figure
-    var setFigure = function(url, callback) {
-      loadImage(url, function(image) {
-        var imageData;
+    // Sets new figure points
+    var setNewFigurePoints = function(points) {
+      var
+        i,
+        point;
 
-        imageData = getImageData(image);
-        imageDataToFigure(imageData, callback);
-      });
-    };
-
-    // Loads a new image
-    var loadImage = function(url, callback) {
-      var image;
-
-      image = new Image();
-
-      image.onload = function() {
-        if (typeof callback === 'function') {
-          callback(image);
-        }
-      };
-
-      actualImage = image.src = url;
-    };
-
-    // Returns image data from an image
-    var getImageData = function(image) {
-      var imageSize, imagePropotion, imagePosition, imageData, vCanvas, context;
-
-      imagePropotion = 1;
-
-      imageSize = {
-        width: image.width,
-        height: image.height
-      };
-
-      imagePropotion = elW / imageSize.width;
-
-      if (elH / imageSize.height < imagePropotion) {
-        imagePropotion = elH / imageSize.height;
-      }
-
-      imageSize = {
-        width: imagePropotion * imageSize.width,
-        height: imagePropotion * imageSize.height
-      };
-
-      imagePosition = {
-        x: elW / 2 - imageSize.width / 2,
-        y: elH / 2 - imageSize.height / 2
-      };
-
-      vCtx.clearRect(0, 0, elW, elH);
-      vCtx.drawImage(image, imagePosition.x, imagePosition.y, imageSize.width, imageSize.height);
-      imageData = vCtx.getImageData(0, 0, elW, elH);
-
-      return imageData.data;
-    };
-
-
-    // Converts image data to a points figure
-    var imageDataToFigure = function(imageData, callback) {
-      var i, numberPoints, x, y, position, point;
-
-      i = 3;
-      numberPoints = 0;
-      for (y = 0; y < elH; y++) {
-        for (x = 0; x < elW; x++, i += 4) {
-          if (imageData[i] > 127 && Math.random() < options.pointDensity) {
-            position = {
-              x: x,
-              y: y
-            };
-
-            if (typeof figurePoints[numberPoints] !== 'undefined') {
-              figurePoints[numberPoints].setPosition(position);
-            } else {
-              point = new FigurePoint(position);
-              figurePoints.push(point);
-            }
-
-            numberPoints++;
-          }
+      for (i = 0; i < points.length; i++) {
+        if (typeof figurePoints[i] === 'undefined') {
+          point = new FigurePoint(points[i]);
+          figurePoints.push(point);
+        } else {
+          figurePoints[i].setPosition(points[i]);
         }
       }
 
-      for (i = numberPoints; i < figurePoints.length; i++) {
-        figurePoints[i].setOffset();
-      }
-
-      if (typeof callback === 'function') {
-        callback();
+      for (i = points.length; i < figurePoints.length; i++) {
+        figurePoints[i].setOffset(points[i]);
       }
     };
-
 
     // Removes offscreen points of previous figure
     var removeOffscreenFigurePoints = function() {
@@ -443,6 +383,74 @@
           i--;
         }
       }
+    };
+
+    // Sets a new figure
+    var setFigure = function(image, callback) {
+      var
+        points;
+
+      actualImage = image.src;
+
+      if (Array.isArray(cache[actualImage])) {
+        points = cache[actualImage];
+      } else {
+        points = cache[actualImage] = imageToFigurePoints(image);
+      }
+
+      setNewFigurePoints(points);
+      callback();
+    };
+
+    // Converts image data to a points figure
+    var imageToFigurePoints = function(image) {
+      var
+        imagePropotion,
+        imageSize,
+        imagePosition,
+        imageData,
+        i,
+        numberPoints,
+        points,
+        x,
+        y;
+
+      imagePropotion = 1;
+
+      imagePropotion = elW / image.width;
+
+      if (elH / image.height < imagePropotion) {
+        imagePropotion = elH / image.height;
+      }
+
+      imageSize = {
+        width: imagePropotion * image.width,
+        height: imagePropotion * image.height
+      };
+
+      imagePosition = {
+        x: elW / 2 - imageSize.width / 2,
+        y: elH / 2 - imageSize.height / 2
+      };
+
+      vCtx.clearRect(0, 0, elW, elH);
+      vCtx.drawImage(image, imagePosition.x, imagePosition.y, imageSize.width, imageSize.height);
+      imageData = vCtx.getImageData(0, 0, elW, elH).data;
+
+      i = 3;
+      points = [];
+      for (y = 0; y < elH; y++) {
+        for (x = 0; x < elW; x++, i += 4) {
+          if (imageData[i] > 127 && Math.random() < options.pointDensity) {
+            points.push({
+              x: x,
+              y: y
+            });
+          }
+        }
+      }
+
+      return points;
     };
 
     /**

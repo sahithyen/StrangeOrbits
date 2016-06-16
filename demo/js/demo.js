@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-  var strangeOrbitsDiv,
+  var
+    strangeOrbitsDiv,
     introDiv,
     progressDiv,
     strangeOrbits,
@@ -46,7 +47,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clock >= totalDuration) {
       clock = 0;
 
-      strangeOrbits.showFigure(slides[index], 3000);
+      image = new Image();
+
+      image.onload = function() {
+        strangeOrbits.showFigure(image, 3000);
+      };
+
+      image.src = slides[index];
 
       index = index < slides.length - 1 ? index + 1 : 0;
     } else {
