@@ -58,7 +58,8 @@
       animationQueue = [],
       currentAnimation = null,
       actualImage = null,
-      cache,
+      pointsCache,
+      imageCache = {},
       elW,
       elH,
       canvas,
@@ -158,6 +159,8 @@
 
     // Shows a figur
     this.showFigure = function(image, duration, easing, callback) {
+      imageCache[image.src] = image;
+
       animationQueue.push({
         type: 'showFigure',
         clock: 0,
@@ -215,10 +218,10 @@
       vCtx.canvas.width = elW;
       vCtx.canvas.height = elH;
 
-      cache = {};
+      pointsCache = {};
 
       if (actualImage !== null) {
-        setFigure(actualImage, function() {
+        setFigure(imageCache[actualImage], function() {
           removeOffscreenFigurePoints();
         });
       }
@@ -392,10 +395,10 @@
 
       actualImage = image.src;
 
-      if (Array.isArray(cache[actualImage])) {
-        points = cache[actualImage];
+      if (Array.isArray(pointsCache[actualImage])) {
+        points = pointsCache[actualImage];
       } else {
-        points = cache[actualImage] = imageToFigurePoints(image);
+        points = pointsCache[actualImage] = imageToFigurePoints(image);
       }
 
       setNewFigurePoints(points);
