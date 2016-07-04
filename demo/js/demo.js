@@ -47,13 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clock >= totalDuration) {
       clock = 0;
 
-      image = new Image();
-
-      image.onload = function() {
-        strangeOrbits.showFigure(image, 3000);
-      };
-
-      image.src = slides[index];
+      strangeOrbits.showFigure(slides[index], 3000);
 
       index = index < slides.length - 1 ? index + 1 : 0;
     } else {
