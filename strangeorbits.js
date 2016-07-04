@@ -389,20 +389,27 @@
     };
 
     // Sets a new figure
-    var setFigure = function(image, callback) {
+    var setFigure = function(src, callback) {
       var
-        points;
+        points,
+        image;
 
-      actualImage = image.src;
+      actualImage = src;
 
-      if (Array.isArray(pointsCache[actualImage])) {
-        points = pointsCache[actualImage];
-      } else {
-        points = pointsCache[actualImage] = imageToFigurePoints(image);
-      }
+      image = new Image();
 
-      setNewFigurePoints(points);
-      callback();
+      image.onload = function() {
+        if (Array.isArray(pointsCache[actualImage])) {
+          points = pointsCache[actualImage];
+        } else {
+          points = pointsCache[actualImage] = imageToFigurePoints(image);
+        }
+
+        setNewFigurePoints(points);
+        callback();
+      };
+
+      image.src = actualImage;
     };
 
     // Converts image data to a points figure
