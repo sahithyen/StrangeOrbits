@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-  var strangeOrbitsDiv,
+  var
+    strangeOrbitsDiv,
     introDiv,
     progressDiv,
     strangeOrbits,
