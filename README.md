@@ -175,7 +175,7 @@ Activates the point force field boost while holding the mouse button pressed.
 ### clickedMouseForceRadius
 
 ```
-90
+70
 ```
 
 Sets the boosted point force field radius.

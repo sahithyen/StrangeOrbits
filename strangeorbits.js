@@ -50,7 +50,8 @@
       paused = true,
       pointerPos = {
         x: null,
-        y: null
+        y: null,
+        force: 1
       },
       mouseDown = false,
       isTouched = false,
@@ -88,7 +89,7 @@
       pointForceActivated: true,
       pointForceRadius: 60,
       clickedMouseForceActivated: true,
-      clickedMouseForceRadius: 90,
+      clickedMouseForceRadius: 70,
       animationEasings: {
         'ease': new BezierEasing(0.25, 0.1, 0.25, 1.0),
         'linear': new BezierEasing(0.00, 0.0, 1.00, 1.0),
@@ -139,6 +140,10 @@
       element.addEventListener("touchmove", changeTouchPos);
       element.addEventListener("touchend", touchEnded);
       element.addEventListener("touchcancel", touchEnded);
+      element.addEventListener("webkitmouseforcewillbegin", prepareMouseForceClick);
+      element.addEventListener("webkitmouseforcedown", changeMouseForce);
+      element.addEventListener("webkitmouseforceup", changeMouseForce);
+      element.addEventListener("webkitmouseforcechanged", changeMouseForce);
     };
 
     /**
@@ -236,7 +241,7 @@
     };
 
     // Handles a mouse button press
-    var mouseButtonPressed = function() {
+    var mouseButtonPressed = function(event) {
       mouseDown = true;
     };
 
@@ -249,6 +254,14 @@
     var changeTouchPos = function(event) {
       pointerPos.x = event.changedTouches[0].clientX;
       pointerPos.y = event.changedTouches[0].clientY;
+    };
+
+    var prepareMouseForceClick = function(event) {
+      event.preventDefault();
+    };
+
+    var changeMouseForce = function(event) {
+      pointerPos.force = event.webkitForce || 1;
     };
 
     // Handles a started touch event
@@ -654,7 +667,7 @@
       distanceToMouse = Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
 
       if (mouseDown && options.clickedMouseForceActivated) {
-        forceRadius = options.clickedMouseForceRadius;
+        forceRadius = options.clickedMouseForceRadius * pointerPos.force;
       } else {
         forceRadius = options.pointForceRadius;
       }
